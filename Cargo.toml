@@ -2,6 +2,12 @@
 name = "proc-singleton"
 version = "0.1.0"
 edition = "2024"
+authors = ["johnteper <git@johnteper.me>"]
+description = "Rust proc-macros for implement Singleton Pattern"
+homepage = "https://github.com/jonhteper/proc-singleton"
+license = "MIT"
+repository = "https://github.com/jonhteper/proc-singleton"
+keywords = ["macro", "procedural", "singleton"]
 
 [lib]
 name = "proc_singleton"
