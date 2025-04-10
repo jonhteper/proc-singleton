@@ -1,0 +1,17 @@
+[package]
+name = "proc-singleton"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+name = "proc_singleton"
+proc-macro = true
+path = "src/lib.rs"
+
+[dependencies]
+proc-macro2 = "1.0.94"
+quote = "1.0.40"
+syn = { version = "2.0.100", features = ["full"] }
+
+[dev-dependencies]
+uuid = { version = "1.11.0", features = ["v4"] }
