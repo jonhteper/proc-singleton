@@ -64,6 +64,53 @@ pub fn singleton_from_static(attr: TokenStream, item: TokenStream) -> TokenStrea
     expanded.into()
 }
 
+/// Derives an Arc-based singleton implementation for a struct based on a static variable.
+///
+/// # Examples
+/// ```
+/// use std::sync::{LazyLock, Arc};
+/// use uuid::Uuid;
+/// use proc_singleton::singleton_from_static_arc;
+///
+/// #[singleton_from_static_arc(Identifier)]
+/// static IDENT: LazyLock<Arc<Identifier>> = LazyLock::new(|| {
+///     Arc::new(Identifier {
+///         id: Uuid::new_v4(),
+///     })
+/// });
+///
+/// struct Identifier {
+///     id: Uuid,
+/// }
+///
+/// fn main() {
+///     let instance = Identifier::get_instance();
+///     let same_instance = Identifier::get_instance();
+///
+///     assert!(Arc::ptr_eq(&instance, &same_instance));
+/// }
+/// ```
+#[cfg(feature = "arc")]
+#[proc_macro_attribute]
+pub fn singleton_from_static_arc(attr: TokenStream, item: TokenStream) -> TokenStream {
+    let args = parse_macro_input!(attr as SingletonArgs);
+    let type_name = &args.type_name;
+    let input = parse_macro_input!(item as ItemStatic);
+    let static_name = &input.ident;
+
+    let expanded = quote! {
+        #input
+
+        impl #type_name {
+            pub fn get_instance() -> Arc<#type_name> {
+                Arc::clone(&#static_name)
+            }
+        }
+    };
+
+    expanded.into()
+}
+
 /// Derives a singleton implementation for a struct based on a static variable.
 ///
 /// # Examples
@@ -102,6 +149,51 @@ pub fn derive_singleton(input: TokenStream) -> TokenStream {
         impl #struct_name {
             pub fn get_instance() -> &'static #struct_name {
                 &#static_name
+            }
+        }
+    };
+
+    expanded.into()
+}
+
+/// Derives a singleton implementation for a struct based on a static Arc variable.
+///
+/// # Examples
+/// ```
+/// use std::sync::{LazyLock, Arc};
+/// use uuid::Uuid;
+/// use proc_singleton::ArcSingleton;
+///
+/// static IDENT: LazyLock<Arc<Identifier>> = LazyLock::new(|| {
+///     Arc::new(Identifier {
+///         id: Uuid::new_v4(),
+///     })
+/// });
+/// #[derive(ArcSingleton)]
+/// #[singleton(IDENT)]
+/// struct Identifier {
+///     id: Uuid,
+/// }
+///
+/// fn main() {
+///     let instance = Identifier::get_instance();
+///     let same_instance = Identifier::get_instance();
+///
+///     assert!(Arc::ptr_eq(&instance, &same_instance));
+/// }
+/// ```
+#[cfg(feature = "arc")]
+#[proc_macro_derive(ArcSingleton, attributes(singleton))]
+pub fn arc_derive_singleton(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let struct_name = &input.ident;
+    let static_name =
+        find_singleton_static_name(&input.attrs).expect("#[singleton(STATIC_NAME)] is required");
+
+    let expanded = quote! {
+        impl #struct_name {
+            pub fn get_instance() -> Arc<#struct_name> {
+                Arc::clone(&#static_name)
             }
         }
     };
