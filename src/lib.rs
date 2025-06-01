@@ -204,11 +204,9 @@ pub fn arc_derive_singleton(input: TokenStream) -> TokenStream {
 fn find_singleton_static_name(attrs: &[Attribute]) -> Option<syn::Ident> {
     for attr in attrs {
         if attr.path().is_ident("singleton") {
-            if let Ok(expr) = attr.parse_args::<syn::Expr>() {
-                if let syn::Expr::Path(expr_path) = expr {
-                    if let Some(ident) = expr_path.path.get_ident() {
-                        return Some(ident.clone());
-                    }
+            if let Ok(syn::Expr::Path(expr_path)) = attr.parse_args::<syn::Expr>() {
+                if let Some(ident) = expr_path.path.get_ident() {
+                    return Some(ident.clone());
                 }
             }
         }
